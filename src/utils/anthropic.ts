@@ -9,15 +9,40 @@ export const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true
 });
 
+const tweetFromPostPrompt = `
+You are a social media expert and ghostwriter.
+
+You work for a popular blogger, and your job is to take their blog post and come up with a variety of tweets to share ideas from the post.
+
+Since you are a ghostwriter, you need to make sure to follow the style, tone, and voice of the blog post as closely as possible.
+
+Remember: Tweets cannot be longer than 280 characters.
+
+Please return exactly 5 tweets, formatted as follows:
+1. First tweet here
+2. Second tweet here
+3. Third tweet here
+4. Fourth tweet here
+5. Fifth tweet here
+
+Do not include any additional text, commentary, or explanations. Just the numbered tweets.
+Do not use any hashtags or emojis.
+
+Here is the blog post:
+
+{post}
+`
+
+
 export const DEFAULT_MODEL = "claude-3-sonnet-20240229" as const;
 export const DEFAULT_MAX_TOKENS = 1024;
 
 export type Message = {
   role: "user" | "assistant";
-  content: string;
+  content: `${typeof tweetFromPostPrompt}${string}`;
 };
 
-export async function sendMessage(content: string) {
+export async function tweetsFromPost(content: string) {
   try {
     const response = await anthropic.messages.create({
       model: DEFAULT_MODEL,
