@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { tweetsFromPost } from './utils/anthropic';
 import { supabase, testConnection } from './utils/supabase';
 import { SavedTweets, SavedTweetsRef } from './components/SavedTweets';
+import { DebugRefresh } from './components/DebugRefresh';
 
 type Tweet = {
   id: number;
@@ -15,6 +16,9 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [editingTweetId, setEditingTweetId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
     testConnection().then(connected => {
@@ -67,6 +71,24 @@ export function App() {
     }
   };
 
+  const startEditing = (tweet: Tweet) => {
+    setEditingTweetId(tweet.id);
+    setEditContent(tweet.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingTweetId(null);
+    setEditContent('');
+  };
+
+  const updateGeneratedTweet = (id: number, newContent: string) => {
+    setTweets(tweets.map(tweet => 
+      tweet.id === id ? { ...tweet, content: newContent } : tweet
+    ));
+    setEditingTweetId(null);
+    setEditContent('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -86,9 +108,20 @@ export function App() {
     }
   };
 
+  useEffect(() => {
+    if (import.meta.hot) {
+      import.meta.hot.on('vite:beforeUpdate', () => {
+        console.log('[App] HMR update pending...');
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-5xl mx-auto px-4 py-16 pr-96">
+      <DebugRefresh />
+      <div className={`max-w-5xl mx-auto px-4 py-16 transition-all duration-300 ${
+        isSidebarCollapsed ? 'pr-16' : 'pr-96'
+      }`}>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
             Content Remix Tool
@@ -161,32 +194,62 @@ export function App() {
                   >
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1">
-                        <p className="text-gray-900 text-lg">{tweet.content}</p>
-                        <div className="mt-3 flex items-center text-sm text-gray-500">
-                          <span>{280 - tweet.content.length} characters remaining</span>
-                        </div>
+                        {editingTweetId === tweet.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              rows={3}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={cancelEditing}
+                                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => updateGeneratedTweet(tweet.id, editContent)}
+                                className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-gray-900 text-lg">{tweet.content}</p>
+                            <div className="mt-3 flex items-center text-sm text-gray-500">
+                              <span>{280 - tweet.content.length} characters remaining</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => saveTweet(tweet.content)}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-green-600 hover:bg-green-50"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Save</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openTwitterIntent(tweet.content)}
-                          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-[#1DA1F2] hover:bg-[#1DA1F2]/10"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                          </svg>
-                          <span>Tweet</span>
-                        </button>
+                        {!editingTweetId && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => saveTweet(tweet.content)}
+                              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-green-600 hover:bg-green-50"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Save</span>
+                            </button>
+                            <button
+                              onClick={() => startEditing(tweet)}
+                              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-blue-500 hover:bg-blue-50"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              <span>Edit</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -196,7 +259,10 @@ export function App() {
           )}
         </div>
       </div>
-      <SavedTweets ref={savedTweetsRef} />
+      <SavedTweets 
+        ref={savedTweetsRef} 
+        onCollapse={(collapsed) => setIsSidebarCollapsed(collapsed)}
+      />
     </div>
   );
 } 

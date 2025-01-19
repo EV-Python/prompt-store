@@ -22,6 +22,16 @@ export type SavedTweet = {
   created_at: string;
 };
 
+export async function updateSavedTweet(id: string, content: string) {
+  const { error } = await supabase
+    .from('saved_tweets')
+    .update({ content })
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
+}
+
 // Test function to verify connection
 export async function testConnection() {
   try {
