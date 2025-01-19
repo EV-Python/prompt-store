@@ -1,8 +1,8 @@
 // Import required dependencies
 import React from 'react'; // Core React library
 import ReactDOM from 'react-dom/client'; // React DOM for web rendering
-import './output.css'; // Import the compiled Tailwind CSS styles
-import App from './App'; // Import our main App component
+import { App } from './App'; // Import our main App component
+import './index.css'; // Import the compiled Tailwind CSS styles
 
 // Think of this like plugging in and turning on our app
 // These imports are like gathering all the tools we need before starting
