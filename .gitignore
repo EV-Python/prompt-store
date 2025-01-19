@@ -1,23 +1,32 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Dependencies
-node_modules
-dist
-dist-ssr
-*.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -28,16 +37,11 @@ dist-ssr
 *.tsbuildinfo
 
 # Environment files
-.env
 .env.*
 !.env.example
 
 # Build output
-build
 out
-
-# Coverage directory
-coverage
 
 # Cache
 .cache
@@ -47,4 +51,8 @@ tsconfig.tsbuildinfo
 
 # Vite
 vite.config.js.timestamp-*
-vite.config.ts.timestamp-* 
+vite.config.ts.timestamp-*
+
+# Supabase
+supabase/.branches
+supabase/.temp 

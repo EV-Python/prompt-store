@@ -25,7 +25,7 @@ Please return exactly 5 tweets, formatted as follows:
 4. Fourth tweet here
 5. Fifth tweet here
 
-Do not include any additional text, commentary, or explanations. Just the numbered tweets.
+This is very important: Do not include any additional text, commentary, or explanations. Just the numbered tweets. 
 Do not use any hashtags or emojis.
 
 Here is the blog post:
